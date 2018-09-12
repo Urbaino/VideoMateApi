@@ -1,0 +1,3 @@
+mp4 : En fil med film
+VideoFile : En JSON kopplad till en mp4
+fil : en mp4 eller VideoFile

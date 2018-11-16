@@ -59,7 +59,7 @@ namespace VideoKategoriseringsApi.Controllers
             foreach (var filePath in Directory.EnumerateFiles(Settings.MemoryCardPath))
             {
                 var fileName = Path.GetFileName(filePath);
-                var destinationFilePath = Path.Combine(Settings.DataPath, DateTime.Now.ToString(), "-", fileName);
+                var destinationFilePath = Path.Combine(Settings.DataPath, DateTime.Now.ToString("yyyy-MM-dd_hh-mm-ss") + "-" + fileName);
                 if (System.IO.File.Exists(destinationFilePath))
                     continue;
 

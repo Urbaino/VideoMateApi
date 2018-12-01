@@ -8,10 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using VideoKategoriseringsApi.Models;
+using Microsoft.AspNetCore.Cors;
 
 namespace VideoKategoriseringsApi.Controllers
 {
     [Route("api")]
+    [EnableCors("AllowAll")]
     public class MainController : Controller
     {
         private readonly Settings Settings;
@@ -59,7 +61,8 @@ namespace VideoKategoriseringsApi.Controllers
             foreach (var filePath in Directory.EnumerateFiles(Settings.MemoryCardPath))
             {
                 var fileName = Path.GetFileName(filePath);
-                var destinationFilePath = Path.Combine(Settings.DataPath, DateTime.Now.ToString("yyyy-MM-dd_hh-mm-ss") + "-" + fileName);
+                fileName = DateTime.Now.ToString("yyyy-MM-dd_hh-mm-ss") + "-" + fileName;
+                var destinationFilePath = Path.Combine(Settings.DataPath, fileName);
                 if (System.IO.File.Exists(destinationFilePath))
                     continue;
 

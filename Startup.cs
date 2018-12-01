@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 
 namespace VideoKategoriseringsApi
 {
@@ -40,6 +41,19 @@ namespace VideoKategoriseringsApi
 
         public void ConfigureServicesBase(IServiceCollection services)
         {
+            
+             services.AddCors(options =>
+    {
+        options.AddPolicy("AllowAll",
+            builder =>
+            {
+                builder
+                .AllowAnyOrigin() 
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+            });
+            });
             services.AddMvc();
             services.Configure<Settings>(Configuration);
         }
@@ -54,6 +68,9 @@ namespace VideoKategoriseringsApi
 
             app.UseDefaultFiles();
             app.UseStaticFiles();
+            app.UseStaticFiles(new StaticFileOptions{
+                FileProvider = new PhysicalFileProvider("C:\\Users\\lujo\\dev\\videomate\\storage\\hdd"),RequestPath = "/storage"
+            });
 
             app.UseMvc();
         }

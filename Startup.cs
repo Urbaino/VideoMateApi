@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.Http;
 
 namespace VideoKategoriseringsApi
 {
@@ -69,9 +70,14 @@ namespace VideoKategoriseringsApi
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseStaticFiles(new StaticFileOptions{
-                FileProvider = new PhysicalFileProvider("C:\\Users\\lujo\\dev\\videomate\\storage\\hdd"),RequestPath = "/storage"
+                OnPrepareResponse = ctx => {
+                    ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    ctx.Context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
+                    ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+                },
+                FileProvider = new PhysicalFileProvider("C:\\Users\\o_sra_000\\dev\\videomate\\storage\\hdd"),RequestPath = "/storage"
             });
-
+            app.UseCors("AllowAll");
             app.UseMvc();
         }
     }

@@ -34,14 +34,15 @@ namespace VideoKategoriseringsApi.Controllers
             return Ok();
         }
 
-        [HttpPost("tags/save")]
-        public IActionResult SaveJson([FromBody]Tag[] tags)
+        [HttpPost("suggestions/save")]
+        public IActionResult SaveSuggestions([FromBody]Tag[] suggestions)
         {
-            Console.WriteLine("saving tags to file");
-            if (tags == null)
+            Console.WriteLine("saving suggestions to file");
+            if (suggestions == null)
                 return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
-
-            SaveOrUpdateJSONFile(video);
+            var filePath = Path.Combine(Settings.DataPath, "suggestions.json");
+            var data = JsonConvert.SerializeObject(suggestions);
+            SaveJSONFile(filePath, data);
             return Ok();
         }
 
@@ -152,7 +153,7 @@ namespace VideoKategoriseringsApi.Controllers
             {
                 data = JsonConvert.SerializeObject(video);
             }
-            this.saveJSONFile(path, data);
+            this.SaveJSONFile(filepath, data);
         }
 
         private string RunFFMPEG()

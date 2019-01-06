@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 namespace VideoKategoriseringsApi.Models
 {
     public class VideoFile

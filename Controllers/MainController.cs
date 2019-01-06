@@ -26,10 +26,11 @@ namespace VideoKategoriseringsApi.Controllers
         [HttpPost("save")]
         public IActionResult SaveJson([FromBody]VideoFile video)
         {
+            Console.WriteLine("saving file" + video.location);
             if (video == null)
                 return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
 
-            SaveJSONFile(video);
+            SaveOrUpdateJSONFile(video);
             return Ok();
         }
 
@@ -71,7 +72,7 @@ namespace VideoKategoriseringsApi.Controllers
                 // TODO: Read video file properties.
 
 
-                SaveJSONFile(new VideoFile(
+                SaveOrUpdateJSONFile(new VideoFile(
                     fileName,
                     null,
                     0,
@@ -112,10 +113,24 @@ namespace VideoKategoriseringsApi.Controllers
             }
         }
 
-        private void SaveJSONFile(VideoFile video)
+        private void SaveOrUpdateJSONFile(VideoFile video)
         {
-            var data = JsonConvert.SerializeObject(video);
             var filepath = Path.Combine(Settings.DataPath, Path.GetFileName(video.location) + ".json");
+            var existingObject = ReadJSONFile<VideoFile>(filepath);
+            String data;
+            if(existingObject != null)
+            {
+                existingObject.comment = video.comment;
+                existingObject.exposureRequiresAdjustment = video.exposureRequiresAdjustment;
+                existingObject.rotationRequiresAdjustment = video.rotationRequiresAdjustment;
+                existingObject.status = video.status;
+                existingObject.sequences = video.sequences;
+                data = JsonConvert.SerializeObject(existingObject);
+            }
+            else
+            {
+                data = JsonConvert.SerializeObject(video);
+            }
             var filestream = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
             using (var writer = new StreamWriter(filestream))
             {

@@ -1,17 +1,22 @@
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc;
+
 namespace VideoKategoriseringsApi.Models
 {
     public class VideoFile
     {
-        public VideoFile(string location, string type, decimal framerate, string resolution)
+        public VideoFile(string folder, string fileName, string type, decimal framerate, string resolution)
         {
-            this.location = location;
+            this.folder = folder;
+            this.fileName = fileName;
             this.type = type;
             this.framerate = framerate;
             this.resolution = resolution;
         }
-
-        public string location { get; set; }
+        public string folder { get; set; }
+        public string fileName { get; set; }
+        public string url;
+        
         public string status { get; set; } = "Not processed";
         public string comment { get; set; }
         public bool rotationRequiresAdjustment { get; set; }

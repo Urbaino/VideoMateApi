@@ -26,7 +26,7 @@ namespace VideoKategoriseringsApi.Controllers
         [HttpPost("save")]
         public IActionResult SaveJson([FromBody]VideoFile video)
         {
-            Console.WriteLine("saving file" + video.location);
+            Console.WriteLine("saving file" + video.url);
             if (video == null)
                 return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
 
@@ -51,7 +51,7 @@ namespace VideoKategoriseringsApi.Controllers
         {
             bool showAll = string.IsNullOrEmpty(status);
 
-            var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath)
+            var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath + "/2018-02-14")
                 .Where(x => x.EndsWith(".json"))
                 .Select(filename => new FileInfo(filename));
 
@@ -61,32 +61,48 @@ namespace VideoKategoriseringsApi.Controllers
                 var videoFile = ReadJSONFile<VideoFile>(json.FullName);
                 if (showAll || videoFile.status.ToLowerInvariant().Trim() == status.ToLowerInvariant().Trim())
                 {
-                    videoFile.location = Settings.VideoLocationBase + videoFile.location;
+                    videoFile.url = getUrl(videoFile);
                     data.Add(videoFile);
                 }
             }
             return Ok(data);
         }
 
+        
+
         [HttpGet("process")]
         public IActionResult ProcessMemoryCard()
         {
             foreach (var filePath in Directory.EnumerateFiles(Settings.MemoryCardPath))
-            {
+            {            
                 var fileName = Path.GetFileName(filePath);
-                fileName = DateTime.Now.ToString("yyyy-MM-dd_hh-mm-ss") + "-" + fileName;
-                var destinationFilePath = Path.Combine(Settings.DataPath, fileName);
-                if (System.IO.File.Exists(destinationFilePath))
+                DateTime created = System.IO.File.GetLastWriteTime(filePath); //this is apparenly the only(?) way for us to get original created time...
+                string dateTimeFileWasCaptured = created.ToString("yyyy-MM-dd_HH-mm-ss");
+                string dateFileWasCaptured = created.ToString("yyyy-MM-dd");
+                var destinationFolder = dateFileWasCaptured;                                            //2018-02-14
+                var destinationFileName = dateTimeFileWasCaptured + "_" + fileName;                     // 2018-02-14_17-22-02_DJI_0639.mov
+                var destinationFolderPath = Path.Combine(Settings.DataPath, destinationFolder);        // c:\....\storage\2018-02-14\
+                var destinationFullFilePath = Path.Combine(destinationFolderPath, destinationFileName); // c:\....\storage\2018-02-02\2018-02-14_17-22-02_DJI_0639.mov
+                //var destinationLocalFileNamePath = dateFileWasCaptured + "/" + destinationFileName;       // 2018-02-02\2018-02-14_17-22-02_DJI_0639.mov
+                
+                
+                Console.WriteLine(destinationFullFilePath);
+                               
+                if (!System.IO.File.Exists(destinationFolderPath)){
+                    System.IO.Directory.CreateDirectory(destinationFolderPath);
+                }
+                if (System.IO.File.Exists(destinationFullFilePath))
                     continue;
 
-                System.IO.File.Copy(filePath, destinationFilePath, false);
+                System.IO.File.Copy(filePath, destinationFullFilePath, false);
 
                 // TODO: Read video file properties.
 
 
                 SaveOrUpdateJSONFile(new VideoFile(
-                    fileName,
-                    null,
+                    destinationFolder,
+                    destinationFileName,
+                    "video/mp4",        //TODO: remove hardcoded value
                     0,
                     null
                 ));
@@ -137,11 +153,10 @@ namespace VideoKategoriseringsApi.Controllers
 
         private void SaveOrUpdateJSONFile(VideoFile video)
         {
-            var filepath = Path.Combine(Settings.DataPath, Path.GetFileName(video.location) + ".json");
-            var existingObject = ReadJSONFile<VideoFile>(filepath);
-            string data;
-            if(existingObject != null)
-            {
+             string data;
+            var filepath = getFilePath(video);
+            if (System.IO.File.Exists(filepath)){
+                var existingObject = ReadJSONFile<VideoFile>(filepath);
                 existingObject.comment = video.comment;
                 existingObject.exposureRequiresAdjustment = video.exposureRequiresAdjustment;
                 existingObject.rotationRequiresAdjustment = video.rotationRequiresAdjustment;
@@ -176,6 +191,15 @@ namespace VideoKategoriseringsApi.Controllers
             string result = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
             return result;
+        }
+
+        public string getUrl(VideoFile video)
+        {
+            return Settings.VideoLocationBase + video.folder + "/" + video.fileName;
+        }
+        public string getFilePath(VideoFile video)
+        {
+            return Path.Combine(Settings.DataPath, video.folder, video.fileName + ".json");
         }
     }
 }

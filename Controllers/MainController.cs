@@ -34,6 +34,17 @@ namespace VideoKategoriseringsApi.Controllers
             return Ok();
         }
 
+        [HttpPost("tags/save")]
+        public IActionResult SaveJson([FromBody]Tag[] tags)
+        {
+            Console.WriteLine("saving tags to file");
+            if (tags == null)
+                return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
+
+            SaveOrUpdateJSONFile(video);
+            return Ok();
+        }
+
         [HttpGet("files/{status?}")]
         public IActionResult GetAllFiles(string status)
         {
@@ -113,11 +124,21 @@ namespace VideoKategoriseringsApi.Controllers
             }
         }
 
+        private void SaveJSONFile(string filepath, string data){
+            var filestream = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
+            using (var writer = new StreamWriter(filestream))
+            {
+                writer.Write(data);
+                writer.Flush();
+                filestream.SetLength(filestream.Position);
+            }
+        }
+
         private void SaveOrUpdateJSONFile(VideoFile video)
         {
             var filepath = Path.Combine(Settings.DataPath, Path.GetFileName(video.location) + ".json");
             var existingObject = ReadJSONFile<VideoFile>(filepath);
-            String data;
+            string data;
             if(existingObject != null)
             {
                 existingObject.comment = video.comment;
@@ -131,13 +152,7 @@ namespace VideoKategoriseringsApi.Controllers
             {
                 data = JsonConvert.SerializeObject(video);
             }
-            var filestream = new FileStream(filepath, FileMode.OpenOrCreate, FileAccess.ReadWrite);
-            using (var writer = new StreamWriter(filestream))
-            {
-                writer.Write(data);
-                writer.Flush();
-                filestream.SetLength(filestream.Position);
-            }
+            this.saveJSONFile(path, data);
         }
 
         private string RunFFMPEG()

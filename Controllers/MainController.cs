@@ -74,8 +74,11 @@ namespace VideoKategoriseringsApi.Controllers
         public IActionResult ProcessMemoryCard()
         {
             foreach (var filePath in Directory.EnumerateFiles(Settings.MemoryCardPath))
-            {            
+            {           
+
                 var fileName = Path.GetFileName(filePath);
+                Console.WriteLine("Processing " + fileName);
+
                 DateTime created = System.IO.File.GetLastWriteTime(filePath); //this is apparenly the only(?) way for us to get original created time...
                 string dateTimeFileWasCaptured = created.ToString("yyyy-MM-dd_HH-mm-ss");
                 string dateFileWasCaptured = created.ToString("yyyy-MM-dd");
@@ -83,21 +86,23 @@ namespace VideoKategoriseringsApi.Controllers
                 var destinationFileName = dateTimeFileWasCaptured + "_" + fileName;                     // 2018-02-14_17-22-02_DJI_0639.mov
                 var destinationFolderPath = Path.Combine(Settings.DataPath, destinationFolder);        // c:\....\storage\2018-02-14\
                 var destinationFullFilePath = Path.Combine(destinationFolderPath, destinationFileName); // c:\....\storage\2018-02-02\2018-02-14_17-22-02_DJI_0639.mov
-
-                Console.WriteLine(destinationFullFilePath);
-                               
+               
                 if (!System.IO.File.Exists(destinationFolderPath)){
                     System.IO.Directory.CreateDirectory(destinationFolderPath);
                 }
                 if (System.IO.File.Exists(destinationFullFilePath))
+                {
+                    Console.WriteLine("     File already processed, ignoring.");
                     continue;
-
+                }
+                Console.WriteLine("     Copying file to " + destinationFullFilePath);
                 System.IO.File.Copy(filePath, destinationFullFilePath, false);
                 
+                Console.WriteLine("     Extracting first frame from video as thumbnail");
                 var thumbNailImageUrl = ExtractFirstFrameAsBase64(destinationFullFilePath);
                 // TODO: Read video file properties.
 
-
+                Console.WriteLine("     Creating metadatafile");
                 SaveOrUpdateJSONFile(new VideoFile(
                     destinationFolder,
                     destinationFileName,
@@ -184,14 +189,9 @@ namespace VideoKategoriseringsApi.Controllers
                     CreateNoWindow = true,
                 }
             };
-            Console.WriteLine("Extracting frame from video");
             process.Start();
             string result = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
-            if(false)
-            {
-                Console.WriteLine(result);
-            }
             var screendumpPath = Path.Combine(Directory.GetCurrentDirectory(), "screendump.jpg");
             var imageContent = ImageToBase64(screendumpPath);
             System.IO.File.Delete(screendumpPath);

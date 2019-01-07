@@ -178,7 +178,7 @@ namespace VideoKategoriseringsApi.Controllers
                 StartInfo = new ProcessStartInfo
                 {			 
                     FileName = "ffmpeg",
-                    Arguments = $"-i " + videoFilePath + " -vframes 1 -f image2 screendump.jpg",
+                    Arguments = $"-i " + videoFilePath + " -nostats -loglevel 0 -vframes 1 -f image2 screendump.jpg",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,

@@ -83,9 +83,7 @@ namespace VideoKategoriseringsApi.Controllers
                 var destinationFileName = dateTimeFileWasCaptured + "_" + fileName;                     // 2018-02-14_17-22-02_DJI_0639.mov
                 var destinationFolderPath = Path.Combine(Settings.DataPath, destinationFolder);        // c:\....\storage\2018-02-14\
                 var destinationFullFilePath = Path.Combine(destinationFolderPath, destinationFileName); // c:\....\storage\2018-02-02\2018-02-14_17-22-02_DJI_0639.mov
-                //var destinationLocalFileNamePath = dateFileWasCaptured + "/" + destinationFileName;       // 2018-02-02\2018-02-14_17-22-02_DJI_0639.mov
-                
-                
+
                 Console.WriteLine(destinationFullFilePath);
                                
                 if (!System.IO.File.Exists(destinationFolderPath)){
@@ -95,13 +93,15 @@ namespace VideoKategoriseringsApi.Controllers
                     continue;
 
                 System.IO.File.Copy(filePath, destinationFullFilePath, false);
-
+                
+                var thumbNailImageUrl = ExtractFirstFrameAsBase64(destinationFullFilePath);
                 // TODO: Read video file properties.
 
 
                 SaveOrUpdateJSONFile(new VideoFile(
                     destinationFolder,
                     destinationFileName,
+                    thumbNailImageUrl,
                     "video/mp4",        //TODO: remove hardcoded value
                     0,
                     null
@@ -171,26 +171,31 @@ namespace VideoKategoriseringsApi.Controllers
             this.SaveJSONFile(filepath, data);
         }
 
-        private string RunFFMPEG()
+        private string ExtractFirstFrameAsBase64(string videoFilePath)
         {
             var process = new Process()
             {
                 StartInfo = new ProcessStartInfo
-                {
-                    //FileName = "/bin/bash",
-                    //Arguments = $"-c \"{escapedArgs}\"", 					 
-                    FileName = "ping",
-                    Arguments = $"localhost",
+                {			 
+                    FileName = "ffmpeg",
+                    Arguments = $"-i " + videoFilePath + " -vframes 1 -f image2 screendump.jpg",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 }
             };
-
+            Console.WriteLine("Extracting frame from video");
             process.Start();
             string result = process.StandardOutput.ReadToEnd();
             process.WaitForExit();
-            return result;
+            if(false)
+            {
+                Console.WriteLine(result);
+            }
+            var screendumpPath = Path.Combine(Directory.GetCurrentDirectory(), "screendump.jpg");
+            var imageContent = ImageToBase64(screendumpPath);
+            System.IO.File.Delete(screendumpPath);
+            return imageContent;
         }
 
         public string getUrl(VideoFile video)
@@ -201,5 +206,11 @@ namespace VideoKategoriseringsApi.Controllers
         {
             return Path.Combine(Settings.DataPath, video.folder, video.fileName + ".json");
         }
+
+        public string ImageToBase64(string imagePath)   
+        {  
+            byte[] b = System.IO.File.ReadAllBytes(imagePath);
+            return "data:image/jpeg;base64," + Convert.ToBase64String(b);
+        } 
     }
 }

@@ -5,18 +5,19 @@ namespace VideoKategoriseringsApi.Models
 {
     public class VideoFile
     {
-        public VideoFile(string folder, string fileName, string type, decimal framerate, string resolution)
+        public VideoFile(string folder, string fileName, string thumbNailImageUrl, string type, decimal framerate, string resolution)
         {
             this.folder = folder;
             this.fileName = fileName;
+            this.thumbNailImageUrl = thumbNailImageUrl;
             this.type = type;
             this.framerate = framerate;
             this.resolution = resolution;
         }
         public string folder { get; set; }
         public string fileName { get; set; }
+        public string thumbNailImageUrl { get; set; }
         public string url;
-        
         public string status { get; set; } = "Not processed";
         public string comment { get; set; }
         public bool rotationRequiresAdjustment { get; set; }

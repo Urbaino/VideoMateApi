@@ -73,11 +73,12 @@ namespace VideoKategoriseringsApi.Controllers
         [HttpGet("process")]
         public IActionResult ProcessMemoryCard()
         {
+            Console.WriteLine("Processing memorycard");
             foreach (var filePath in Directory.EnumerateFiles(Settings.MemoryCardPath))
             {           
 
                 var fileName = Path.GetFileName(filePath);
-                Console.WriteLine("Processing " + fileName);
+                Console.WriteLine(" Processing " + fileName);
 
                 DateTime created = System.IO.File.GetLastWriteTime(filePath); //this is apparenly the only(?) way for us to get original created time...
                 string dateTimeFileWasCaptured = created.ToString("yyyy-MM-dd_HH-mm-ss");
@@ -112,6 +113,7 @@ namespace VideoKategoriseringsApi.Controllers
                     null
                 ));
             }
+            Console.WriteLine("Processing memorycard has completed.");
             return Ok();
         }
 

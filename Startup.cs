@@ -75,7 +75,11 @@ namespace VideoKategoriseringsApi
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 },
-                FileProvider = new PhysicalFileProvider("C:\\Users\\o_sra_000\\dev\\videomate\\storage\\hdd"),RequestPath = "/storage"
+                //FileProvider = new PhysicalFileProvider("C:\\Users\\o_sra_000\\dev\\videomate\\storage\\hdd"),RequestPath = "/storage"
+                FileProvider = new PhysicalFileProvider("G:\\videomate\\hdd"),RequestPath = "/storage"
+                 /* "DataPath" : "C:\\Users\\o_sra_000\\dev\\videomate\\storage\\hdd",
+                    "MemoryCardPath" : "C:\\Users\\o_sra_000\\dev\\videomate\\storage\\sd",*/
+                
             });
             app.UseCors("AllowAll");
             app.UseMvc();

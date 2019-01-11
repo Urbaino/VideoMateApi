@@ -51,7 +51,7 @@ namespace VideoKategoriseringsApi.Controllers
         {
             bool showAll = string.IsNullOrEmpty(status);
 
-            var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath + "/2018-02-14")
+            var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath + "/2018-01-22")
                 .Where(x => x.EndsWith(".json"))
                 .Select(filename => new FileInfo(filename));
 
@@ -185,7 +185,7 @@ namespace VideoKategoriseringsApi.Controllers
                 StartInfo = new ProcessStartInfo
                 {			 
                     FileName = "ffmpeg",
-                    Arguments = $"-i " + videoFilePath + " -nostats -loglevel 0 -vframes 1 -f image2 screendump.jpg",
+                    Arguments = $"-i \"" + videoFilePath + "\" -nostats -loglevel 0 -vframes 1 -f image2 screendump.jpg",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,

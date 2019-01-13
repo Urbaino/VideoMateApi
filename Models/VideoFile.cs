@@ -22,6 +22,7 @@ namespace VideoKategoriseringsApi.Models
         public string comment { get; set; }
         public bool rotationRequiresAdjustment { get; set; }
         public bool exposureRequiresAdjustment { get; set; }
+        public bool markedAsDeleted {get; set; }
 
         public Sequence[] sequences { get; set; }
 

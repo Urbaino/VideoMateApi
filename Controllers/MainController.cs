@@ -34,16 +34,27 @@ namespace VideoKategoriseringsApi.Controllers
             return Ok();
         }
 
-        [HttpPost("suggestions/save")]
-        public IActionResult SaveSuggestions([FromBody]Tag[] suggestions)
+        [HttpPost("tagSuggestions/{type}/save")]
+        public IActionResult SaveTagSuggestions(string type, [FromBody]Tag[] suggestions)
         {
             Console.WriteLine("saving suggestions to file");
             if (suggestions == null)
                 return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
-            var filePath = Path.Combine(Settings.DataPath, "suggestions.json");
+            var filePath = Path.Combine(Settings.DataPath, type + "_suggestions.json");
             var data = JsonConvert.SerializeObject(suggestions);
             SaveJSONFile(filePath, data);
-            return Ok();
+            return Ok(new Tag());
+        }
+
+        [HttpGet("tagSuggestions/{type}")]
+        public IActionResult GetAllTagSuggestions(string type)
+        {
+            var filePath = Path.Combine(Settings.DataPath, type + "_suggestions.json");
+            var data = new Tag[0];
+            if (System.IO.File.Exists(filePath)){
+                data = ReadJSONFile<Tag[]>(filePath);
+            }
+            return Ok(data);
         }
 
         [HttpGet("files/{status?}")]
@@ -169,6 +180,7 @@ namespace VideoKategoriseringsApi.Controllers
                 existingObject.rotationRequiresAdjustment = video.rotationRequiresAdjustment;
                 existingObject.status = video.status;
                 existingObject.sequences = video.sequences;
+                existingObject.markedAsDeleted = video.markedAsDeleted;
                 data = JsonConvert.SerializeObject(existingObject);
             }
             else

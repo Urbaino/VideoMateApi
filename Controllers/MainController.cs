@@ -31,7 +31,7 @@ namespace VideoKategoriseringsApi.Controllers
                 return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
 
             SaveOrUpdateJSONFile(video);
-            return Ok();
+            return Ok("Success");
         }
 
         [HttpPost("tagSuggestions/{type}/save")]
@@ -57,12 +57,24 @@ namespace VideoKategoriseringsApi.Controllers
             return Ok(data);
         }
 
-        [HttpGet("files/{status?}")]
-        public IActionResult GetAllFiles(string status)
+        [HttpGet("folders")]
+        public IActionResult GetAllFolders()
         {
-            bool showAll = string.IsNullOrEmpty(status);
+            List<string> result = new List<string>();
+            foreach(var folder in Directory.EnumerateDirectories(Settings.DataPath))
+            {
+                result.Add(folder.Substring(folder.LastIndexOf(Path.DirectorySeparatorChar) + 1));
+            }
+            
+            return Ok(result);
+        }
 
-            var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath + "/2018-01-22")
+        [HttpGet("files/{folderName?}")]
+        public IActionResult GetAllFiles(string folderName)
+        {
+           // bool showAll = string.IsNullOrEmpty(status);
+
+            var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath + "/" + folderName)
                 .Where(x => x.EndsWith(".json"))
                 .Select(filename => new FileInfo(filename));
 
@@ -70,11 +82,11 @@ namespace VideoKategoriseringsApi.Controllers
             foreach (var json in allJSONFiles)
             {
                 var videoFile = ReadJSONFile<VideoFile>(json.FullName);
-                if (showAll || videoFile.status.ToLowerInvariant().Trim() == status.ToLowerInvariant().Trim())
-                {
+               // if (showAll || videoFile.status.ToLowerInvariant().Trim() == status.ToLowerInvariant().Trim())
+               // {
                     videoFile.url = getUrl(videoFile);
                     data.Add(videoFile);
-                }
+               // }
             }
             return Ok(data);
         }

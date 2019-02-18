@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
@@ -66,7 +67,11 @@ namespace VideoKategoriseringsApi
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            String storageRootFolder = Configuration["DataPath"];
+            if(storageRootFolder == null || storageRootFolder.Length == 0)
+            {
+                throw new Exception("Du har missat att ange DataPath i appsettings.json");
+            }
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseStaticFiles(new StaticFileOptions{
@@ -75,11 +80,7 @@ namespace VideoKategoriseringsApi
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 },
-                //FileProvider = new PhysicalFileProvider("C:\\Users\\o_sra_000\\dev\\videomate\\storage\\hdd"),RequestPath = "/storage"
-                FileProvider = new PhysicalFileProvider("G:\\videomate\\hdd"),RequestPath = "/storage"
-                 /* "DataPath" : "C:\\Users\\o_sra_000\\dev\\videomate\\storage\\hdd",
-                    "MemoryCardPath" : "C:\\Users\\o_sra_000\\dev\\videomate\\storage\\sd",*/
-                
+                FileProvider = new PhysicalFileProvider("F:\\videomate\\hdd"),RequestPath = "/storage"        
             });
             app.UseCors("AllowAll");
             app.UseMvc();

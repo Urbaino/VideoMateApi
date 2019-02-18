@@ -80,7 +80,7 @@ namespace VideoKategoriseringsApi
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 },
-                FileProvider = new PhysicalFileProvider("F:\\videomate\\hdd"),RequestPath = "/storage"        
+                FileProvider = new PhysicalFileProvider(storageRootFolder),RequestPath = "/storage"        
             });
             app.UseCors("AllowAll");
             app.UseMvc();

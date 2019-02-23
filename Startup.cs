@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.Http;
+using VideoKategoriseringsApi.Services;
 
 namespace VideoKategoriseringsApi
 {
@@ -43,21 +44,22 @@ namespace VideoKategoriseringsApi
 
         public void ConfigureServicesBase(IServiceCollection services)
         {
-            
-             services.AddCors(options =>
-    {
-        options.AddPolicy("AllowAll",
-            builder =>
+            services.AddCors(options =>
             {
-                builder
-                .AllowAnyOrigin() 
-                .AllowAnyMethod()
-                .AllowAnyHeader()
-                .AllowCredentials();
-            });
+                options.AddPolicy("AllowAll",
+                    builder =>
+                    {
+                        builder
+                        .AllowAnyOrigin()
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials();
+                    });
             });
             services.AddMvc();
             services.Configure<Settings>(Configuration);
+
+            services.AddHostedService<TimedFileSequencerService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,19 +70,23 @@ namespace VideoKategoriseringsApi
                 app.UseDeveloperExceptionPage();
             }
             String storageRootFolder = Configuration["DataPath"];
-            if(storageRootFolder == null || storageRootFolder.Length == 0)
+            if (storageRootFolder == null || storageRootFolder.Length == 0)
             {
                 throw new Exception("Du har missat att ange DataPath i appsettings.json");
             }
+
             app.UseDefaultFiles();
             app.UseStaticFiles();
-            app.UseStaticFiles(new StaticFileOptions{
-                OnPrepareResponse = ctx => {
+            app.UseStaticFiles(new StaticFileOptions
+            {
+                OnPrepareResponse = ctx =>
+                {
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Origin", "*");
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Credentials", "true");
                     ctx.Context.Response.Headers.Append("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
                 },
-                FileProvider = new PhysicalFileProvider(storageRootFolder),RequestPath = "/storage"        
+                FileProvider = new PhysicalFileProvider(storageRootFolder),
+                RequestPath = "/storage"
             });
             app.UseCors("AllowAll");
             app.UseMvc();

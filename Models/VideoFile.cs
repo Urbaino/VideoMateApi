@@ -5,6 +5,15 @@ namespace VideoKategoriseringsApi.Models
 {
     public class VideoFile
     {
+
+        internal bool IsStatus(Statuses s) => status.ToLowerInvariant().Trim() == s.ToString().ToLowerInvariant();
+        internal void SetStatus(Statuses newStatus) => status = newStatus.ToString().ToLowerInvariant();
+
+        internal enum Statuses {
+            categorized,
+            sequences_has_been_processed
+        }
+
         public VideoFile(string folder, string fileName, string thumbNailImageUrl, string type, decimal framerate, string resolution)
         {
             this.folder = folder;
@@ -18,6 +27,7 @@ namespace VideoKategoriseringsApi.Models
         public string fileName { get; set; }
         public string thumbNailImageUrl { get; set; }
         public string url;
+
         public string status { get; set; } = "Not processed";
         public string comment { get; set; }
         public bool rotationRequiresAdjustment { get; set; }

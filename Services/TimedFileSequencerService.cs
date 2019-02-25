@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -8,7 +9,6 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using VideoKategoriseringsApi.Models;
 
@@ -40,12 +40,28 @@ namespace VideoKategoriseringsApi.Services
         {
             _logger.LogInformation("Background Sequencer Service is working.");
 
-            // Go through all the files
-            var files = Directory.EnumerateFiles(_settings.DataPath, "*.json");
-            _logger.LogInformation($"{files.Count()} file{(files.Count() == 1 ? string.Empty : "s")} to process.");
-            foreach (var file in files)
+            // Go through all the folder
+            var files = new List<FileInfo>();
+            var folders = Directory.EnumerateDirectories(_settings.DataPath);
+
+            foreach (var folderPath in folders)
             {
-                await ParseAndProcessFileAsync(file);
+                files.AddRange(Directory.EnumerateFiles(folderPath, "*.json", SearchOption.AllDirectories).Select(p => new FileInfo(p)));
+
+            }
+            _logger.LogInformation($"{files.Count()} file{(files.Count() == 1 ? string.Empty : "s")} to process.");
+
+            // Go through all JSON files in the folder
+            foreach (var fileInfo in files)
+            {
+                try
+                {
+                    await ParseAndProcessFileAsync(fileInfo);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(0, ex, $"Error processing file: {fileInfo.FullName}");
+                }
             }
 
             _logger.LogInformation("Background Sequencer Service finished working.");
@@ -65,17 +81,17 @@ namespace VideoKategoriseringsApi.Services
             _timer?.Dispose();
         }
 
-        private async Task ParseAndProcessFileAsync(string videoInfoPath)
+        private async Task ParseAndProcessFileAsync(FileInfo fileInfo)
         {
             VideoFile videoFile;
             try
             {
-                var fileText = await File.ReadAllTextAsync(videoInfoPath);
+                var fileText = await File.ReadAllTextAsync(fileInfo.FullName);
                 videoFile = JObject.Parse(fileText).ToObject<VideoFile>();
             }
             catch (Exception e)
             {
-                _logger.LogError(0, e, $"Could not read and parse JSON file: {videoInfoPath}");
+                _logger.LogError(0, e, $"Could not read and parse JSON file: {fileInfo.FullName}");
                 return;
             }
 
@@ -87,23 +103,23 @@ namespace VideoKategoriseringsApi.Services
                 var duration = (float)(sequence.outPoint - sequence.inPoint);
                 var sequenceId = sequence.id;
 
-                SequenceVideo(videoFile.fileName, startTime, duration, sequenceId);
+                SequenceVideo(videoFile.fileName, fileInfo.DirectoryName, startTime, duration, sequenceId);
             }
 
             // Change status
             videoFile.SetStatus(VideoFile.Statuses.sequences_has_been_processed);
-            await File.WriteAllTextAsync(videoInfoPath, JObject.FromObject(videoFile).ToString());
+            await File.WriteAllTextAsync(fileInfo.FullName, JObject.FromObject(videoFile).ToString());
 
-            _logger.LogInformation($"File {videoInfoPath} sequenced.");
+            _logger.LogInformation($"File {fileInfo.FullName} sequenced.");
         }
 
-        private void SequenceVideo(string videoFilePath, float startTime, float duration, string sequenceId)
+        private void SequenceVideo(string videoFileName, string folderPath, float startTime, float duration, string sequenceId)
         {
-            _logger.LogInformation($"Sequencing {videoFilePath}:{sequenceId}");
+            _logger.LogInformation($"Sequencing {videoFileName}:{sequenceId}");
 
             var formattedStartTime = startTime.ToString(CultureInfo.InvariantCulture);
             var formattedDuration = duration.ToString(CultureInfo.InvariantCulture);
-            var newFilePath = videoFilePath.Replace(".MP4", $"_SEQ_{sequenceId}.MP4");
+            var newFilePath = videoFileName.Replace(".MP4", $"_SEQ_{sequenceId}.MP4");
 
             // -i   Input File
             // -ss  Start Time
@@ -115,12 +131,13 @@ namespace VideoKategoriseringsApi.Services
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    FileName = "ffmpeg",
-                    Arguments = $"-i {videoFilePath} -ss {formattedStartTime} -t {formattedDuration} -n -c copy -loglevel warning {newFilePath}",
+                    // FileName = "ffmpeg",
+                    FileName = $"{_settings.DataPath}/ffmpeg.exe",
+                    Arguments = $"-i {videoFileName} -ss {formattedStartTime} -t {formattedDuration} -n -c copy -loglevel warning {newFilePath}",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     CreateNoWindow = true,
-                    WorkingDirectory = _settings.DataPath
+                    WorkingDirectory = folderPath
                 }
             };
             process.Start();

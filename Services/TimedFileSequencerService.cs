@@ -131,8 +131,8 @@ namespace VideoKategoriseringsApi.Services
             {
                 StartInfo = new ProcessStartInfo
                 {
-                    // FileName = "ffmpeg",
-                    FileName = $"{_settings.DataPath}/ffmpeg.exe",
+                    FileName = "ffmpeg",
+                    // FileName = $"{_settings.DataPath}/ffmpeg.exe",
                     Arguments = $"-i {videoFileName} -ss {formattedStartTime} -t {formattedDuration} -n -c copy -loglevel warning {newFilePath}",
                     RedirectStandardOutput = true,
                     UseShellExecute = false,

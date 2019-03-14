@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using VideoKategoriseringsApi.Models;
 using Microsoft.AspNetCore.Cors;
+using Newtonsoft.Json.Linq;
 
 namespace VideoKategoriseringsApi.Controllers
 {
@@ -57,6 +58,30 @@ namespace VideoKategoriseringsApi.Controllers
             return Ok(data);
         }
 
+        [HttpPost("searchIndex/save")]
+        public IActionResult SavePregeneratedIndex([FromBody]JObject index)
+        {
+            Console.WriteLine("saving index to file");
+            if (index == null)
+                return BadRequest("Nu gjorde du fel. Ogiltig JSON.");
+            var filePath = Path.Combine(Settings.DataPath, "search_index.json");
+            var data = JsonConvert.SerializeObject(index);
+            SaveJSONFile(filePath, data);
+            return Ok(new Tag());
+        }
+
+        
+        [HttpGet("searchIndex")]
+        public IActionResult GetPregeneratedIndex()
+        {
+            var filePath = Path.Combine(Settings.DataPath, "search_index.json");
+            var data = new JObject();
+            if (System.IO.File.Exists(filePath)){
+                data = ReadJSONFile<JObject>(filePath);
+            }
+            return Ok(data);
+        }
+
         [HttpGet("folders")]
         public IActionResult GetAllFolders()
         {
@@ -90,6 +115,7 @@ namespace VideoKategoriseringsApi.Controllers
             }
             return Ok(data);
         }
+
 
         
 

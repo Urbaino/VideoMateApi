@@ -7,6 +7,7 @@ namespace VideoKategoriseringsApi.Models
         public decimal outPoint { get; set; }
         public string[] tags { get; set; }
         public string[] issues { get; set; }
+        public int rating {get; set;}
         public string thumbNailImageUrl {get; set; }
     }
 }

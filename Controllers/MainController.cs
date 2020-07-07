@@ -82,6 +82,41 @@ namespace VideoKategoriseringsApi.Controllers
             return Ok(data);
         }
 
+        [HttpGet("statistics")]
+        public IActionResult GetStatistics()
+        {
+            var statistics = new Dictionary<String, int>();
+            statistics.Add("totalNrOfFiles", 0);
+            statistics.Add("nrOfDeletedFiles", 0);
+            statistics.Add("nrOfCategorizedFiles", 0);
+            statistics.Add("nrOfFilesToCategorize", 0);
+            statistics.Add("nrOfProcessedFiles", 0);
+            
+            
+            foreach(var folder in Directory.EnumerateDirectories(Settings.DataPath))
+            {
+                var dir = folder.Substring(folder.LastIndexOf(Path.DirectorySeparatorChar) + 1);
+                foreach(var file in GetAllVideoFilesInDirectory(dir))
+                {
+                    statistics["totalNrOfFiles"]++;
+                    if(file.status.ToLowerInvariant().Trim() == "categorized")
+                    {
+                        statistics["nrOfCategorizedFiles"]++;
+                    }
+                    if(file.status.ToLowerInvariant().Trim() == "sequences_has_been_processed")
+                    {
+                        statistics["nrOfProcessedFiles"]++;
+                    }
+                    
+                    if(file.markedAsDeleted)
+                    {
+                        statistics["nrOfDeletedFiles"]++;
+                    }
+                } 
+            }
+            statistics["nrOfFilesToCategorize"] = statistics["totalNrOfFiles"] - statistics["nrOfDeletedFiles"] - statistics["nrOfCategorizedFiles"];          
+            return Ok(statistics);
+        }
         [HttpGet("folders")]
         public IActionResult GetAllFolders()
         {
@@ -98,7 +133,11 @@ namespace VideoKategoriseringsApi.Controllers
         public IActionResult GetAllFiles(string folderName)
         {
            // bool showAll = string.IsNullOrEmpty(status);
+            List<VideoFile> files = GetAllVideoFilesInDirectory(folderName);
+            return Ok(files);
+        }
 
+        private List<VideoFile> GetAllVideoFilesInDirectory(String folderName){
             var allJSONFiles = Directory.EnumerateFiles(Settings.DataPath + "/" + folderName)
                 .Where(x => x.EndsWith(".json"))
                 .Select(filename => new FileInfo(filename));
@@ -113,7 +152,7 @@ namespace VideoKategoriseringsApi.Controllers
                     data.Add(videoFile);
                // }
             }
-            return Ok(data);
+            return data;
         }
 
 
